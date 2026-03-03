@@ -509,7 +509,7 @@ function triggerAutoSave() {
     await db.from('configurations').upsert({
       name: '__autosave__',
       steps: JSON.parse(JSON.stringify(steps)),
-      themes: themes.filter(t => !BUILTIN_THEMES.find(b => b.id === t.id)),
+      themes: JSON.parse(JSON.stringify(themes)),
       updated_at: new Date().toISOString()
     }, { onConflict: 'name' });
   }, 1500);
@@ -521,7 +521,7 @@ async function saveConfig() {
   const { error } = await db.from('configurations').upsert({
     name,
     steps: JSON.parse(JSON.stringify(steps)),
-    themes: themes.filter(t => !BUILTIN_THEMES.find(b => b.id === t.id)),
+    themes: JSON.parse(JSON.stringify(themes)),
     updated_at: new Date().toISOString()
   }, { onConflict: 'name' });
   if (error) { toast('❌ Save failed: ' + error.message); return; }
@@ -537,8 +537,8 @@ async function loadConfig(name) {
   if (!saves[name]) return;
   const saved = saves[name];
   steps = JSON.parse(JSON.stringify(saved.steps));
-  if (saved.themes) {
-    saved.themes.forEach(t => { if (!themes.find(x => x.id === t.id)) themes.push(t); });
+  if (saved.themes && saved.themes.length > 0) {
+    themes = JSON.parse(JSON.stringify(saved.themes));
     saveThemesToStorage();
   }
   currentConfigName = name;
@@ -645,16 +645,41 @@ function renderThemeList() {
   themes.forEach(t => {
     const isBuiltin = !!BUILTIN_THEMES.find(b => b.id === t.id);
     const item = document.createElement('div');
-    item.className = 'theme-list-item' + (isBuiltin ? ' builtin' : '');
+    item.className = 'theme-list-item';
     item.innerHTML = `
-      <div class="tl-dot" style="background:${t.color}"></div>
-      <div class="tl-name">${t.name}</div>
+      <input type="color" value="${t.color}"
+        style="width:26px;height:26px;border-radius:50%;border:2px solid var(--border);cursor:pointer;padding:0;background:none;flex-shrink:0;"
+        oninput="updateThemeColor('${t.id}', this.value)">
+      <div class="tl-name" contenteditable="true" spellcheck="false"
+        style="outline:none;flex:1;border-bottom:1px dashed transparent;"
+        onfocus="this.style.borderBottomColor='var(--accent)'"
+        onblur="this.style.borderBottomColor='transparent'"
+        oninput="updateThemeName('${t.id}', this.textContent)">${t.name}</div>
       ${isBuiltin
-        ? '<span class="tl-del" style="cursor:default">🔒</span>'
+        ? '<span style="font-size:10px;color:var(--muted);opacity:0.4;">built-in</span>'
         : `<span class="tl-del" onclick="deleteTheme('${t.id}')">×</span>`}
     `;
     c.appendChild(item);
   });
+}
+
+function updateThemeColor(id, color) {
+  const t = themes.find(x => x.id === id);
+  if (!t) return;
+  t.color = color;
+  saveThemesToStorage();
+  renderFlow();
+  renderLegend();
+  triggerAutoSave();
+}
+
+function updateThemeName(id, name) {
+  const t = themes.find(x => x.id === id);
+  if (!t) return;
+  t.name = name.trim() || t.name;
+  saveThemesToStorage();
+  renderLegend();
+  triggerAutoSave();
 }
 function buildThemeSelectRow(containerId) {
   const row = document.getElementById(containerId);
@@ -863,8 +888,8 @@ async function init() {
     .single();
   if (data) {
     steps = JSON.parse(JSON.stringify(data.steps));
-    if (data.themes) {
-      data.themes.forEach(t => { if (!themes.find(x => x.id === t.id)) themes.push(t); });
+    if (data.themes && data.themes.length > 0) {
+      themes = JSON.parse(JSON.stringify(data.themes));
       saveThemesToStorage();
     }
   }
