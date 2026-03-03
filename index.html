@@ -709,19 +709,19 @@ function renderFlow() {
     roleEl.className = 'role-tag';
     roleEl.contentEditable = true;
     roleEl.textContent = step.role;
-    roleEl.oninput = () => { steps[i].role = roleEl.textContent; renderLegend(); };
+    roleEl.oninput = () => { steps[i].role = roleEl.textContent; renderLegend(); triggerAutoSave(); };
     card.appendChild(roleEl);
 
     const titleEl = document.createElement('h3');
     titleEl.contentEditable = true;
     titleEl.textContent = step.title;
-    titleEl.oninput = () => { steps[i].title = titleEl.textContent; };
+    titleEl.oninput = () => { steps[i].title = titleEl.textContent; triggerAutoSave(); };
     card.appendChild(titleEl);
 
     const descEl = document.createElement('p');
     descEl.contentEditable = true;
     descEl.textContent = step.desc;
-    descEl.oninput = () => { steps[i].desc = descEl.textContent; };
+    descEl.oninput = () => { steps[i].desc = descEl.textContent; triggerAutoSave(); };
     card.appendChild(descEl);
 
     applyThemeToCard(card, step.themeId);
