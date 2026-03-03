@@ -676,8 +676,14 @@ function updateThemeColor(id, color) {
 function updateThemeName(id, name) {
   const t = themes.find(x => x.id === id);
   if (!t) return;
-  t.name = name.trim() || t.name;
+  const oldName = t.name;
+  t.name = name.trim() || oldName;
+  // Sync role tag on all cards using this theme
+  steps.forEach(s => {
+    if (s.themeId === id && s.role === oldName) s.role = t.name;
+  });
   saveThemesToStorage();
+  renderFlow();
   renderLegend();
   triggerAutoSave();
 }
