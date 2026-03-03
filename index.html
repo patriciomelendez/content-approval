@@ -469,6 +469,9 @@ let steps = JSON.parse(JSON.stringify(DEFAULT_STEPS));
 let themes = JSON.parse(JSON.stringify(BUILTIN_THEMES));
 let dragSrcIndex = null;
 let selectedNewThemeId = 'designer';
+let currentConfigName = null;
+let autoSaveTimer = null;
+let initialized = false;
 
 // ============================================================
 // LOCAL STORAGE (themes only)
@@ -500,6 +503,20 @@ async function getSaves() {
   return result;
 }
 
+// Auto-save current state as __autosave__ (debounced 1.5s)
+function triggerAutoSave() {
+  if (!initialized) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(async () => {
+    await db.from('configurations').upsert({
+      name: '__autosave__',
+      steps: JSON.parse(JSON.stringify(steps)),
+      themes: themes.filter(t => !BUILTIN_THEMES.find(b => b.id === t.id)),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'name' });
+  }, 1500);
+}
+
 async function saveConfig() {
   const name = document.getElementById('save-name').value.trim();
   if (!name) { toast('Enter a name first'); return; }
@@ -510,6 +527,7 @@ async function saveConfig() {
     updated_at: new Date().toISOString()
   }, { onConflict: 'name' });
   if (error) { toast('❌ Save failed: ' + error.message); return; }
+  currentConfigName = name;
   closeModal('save');
   document.getElementById('save-name').value = '';
   toast('✅ Saved: ' + name);
@@ -525,6 +543,7 @@ async function loadConfig(name) {
     saved.themes.forEach(t => { if (!themes.find(x => x.id === t.id)) themes.push(t); });
     saveThemesToStorage();
   }
+  currentConfigName = name;
   closeSaveTray();
   renderFlow();
   renderLegend();
@@ -534,6 +553,7 @@ async function loadConfig(name) {
 async function deleteConfig(name) {
   const { error } = await db.from('configurations').delete().eq('name', name);
   if (error) { toast('❌ Delete failed'); return; }
+  if (currentConfigName === name) currentConfigName = null;
   renderSavesList();
   toast('🗑 Deleted: ' + name);
 }
@@ -542,16 +562,19 @@ async function renderSavesList() {
   const container = document.getElementById('saves-list');
   container.innerHTML = '<span class="saves-empty">Loading…</span>';
   const saves = await getSaves();
-  const keys = Object.keys(saves);
+  // Hide internal __autosave__ from list
+  const keys = Object.keys(saves).filter(k => k !== '__autosave__');
   if (!keys.length) {
     container.innerHTML = '<span class="saves-empty">No saved configurations yet.</span>';
     return;
   }
   container.innerHTML = '';
   keys.forEach(name => {
+    const isActive = name === currentConfigName;
     const chip = document.createElement('div');
     chip.className = 'save-chip';
-    chip.innerHTML = `<span onclick="loadConfig('${name}')">${name}</span><span class="chip-del" onclick="deleteConfig('${name}')" title="Delete">×</span>`;
+    chip.style.borderColor = isActive ? 'var(--success)' : '';
+    chip.innerHTML = `<span onclick="loadConfig('${name}')">${name}${isActive ? ' ✓' : ''}</span><span class="chip-del" onclick="deleteConfig('${name}')" title="Delete">×</span>`;
     container.appendChild(chip);
   });
 }
@@ -742,6 +765,7 @@ function renderFlow() {
 
     flow.appendChild(node);
   });
+  triggerAutoSave();
 }
 
 // ============================================================
@@ -790,6 +814,7 @@ function openModal(id) {
     sel.value = steps.length;
   }
   if (id === 'manage-themes') { renderThemeList(); updateColorPreview(); }
+  if (id === 'save') { document.getElementById('save-name').value = currentConfigName || ''; }
   document.getElementById('modal-' + id).classList.add('open');
 }
 function closeModal(id) {
@@ -830,9 +855,26 @@ function toast(msg) {
 // ============================================================
 // INIT
 // ============================================================
-loadThemesFromStorage();
-renderFlow();
-renderLegend();
+async function init() {
+  loadThemesFromStorage();
+  // Try to restore last auto-saved state
+  const { data } = await db
+    .from('configurations')
+    .select('steps, themes')
+    .eq('name', '__autosave__')
+    .single();
+  if (data) {
+    steps = JSON.parse(JSON.stringify(data.steps));
+    if (data.themes) {
+      data.themes.forEach(t => { if (!themes.find(x => x.id === t.id)) themes.push(t); });
+      saveThemesToStorage();
+    }
+  }
+  initialized = true;
+  renderFlow();
+  renderLegend();
+}
+init();
 </script>
 </body>
 </html>
