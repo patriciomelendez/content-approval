@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Content Approval Process</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0d0f14;
@@ -33,7 +34,6 @@
 
   .page { width: 100%; max-width: 1100px; }
 
-  /* HEADER */
   .header { text-align: center; margin-bottom: 32px; animation: fadeDown 0.6s ease both; }
   .header .label { font-family: 'Syne', sans-serif; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
   .header h1 {
@@ -45,12 +45,10 @@
   }
   .header p { margin-top: 8px; color: var(--muted); font-size: 13px; }
 
-  /* LEGEND */
   .legend { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 22px; animation: fadeDown 0.5s ease 0.1s both; }
   .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
   .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
-  /* TOOLBAR */
   .toolbar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; animation: fadeDown 0.5s ease 0.15s both; }
   .btn {
     background: var(--card); border: 1px solid var(--border);
@@ -64,7 +62,6 @@
   .btn.btn-red:hover { border-color: var(--danger); background: rgba(248,113,113,0.08); }
   .btn-sep { width: 1px; background: var(--border); margin: 0 2px; }
 
-  /* SAVES TRAY */
   .saves-tray {
     background: var(--card); border: 1px solid var(--border); border-radius: 10px;
     padding: 12px 16px; margin-bottom: 18px; display: none; flex-wrap: wrap; gap: 8px; align-items: center;
@@ -83,11 +80,9 @@
   .save-chip .chip-del:hover { opacity: 1; }
   .saves-empty { font-size: 12px; color: var(--muted); font-style: italic; }
 
-  /* EDIT HINT */
   .edit-hint { text-align: center; font-size: 11px; color: var(--muted); margin-bottom: 16px; }
   .edit-hint span { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 10px; }
 
-  /* FLOW */
   .flow-wrapper { overflow-x: auto; padding-bottom: 8px; margin-bottom: 14px; }
   #flow {
     display: flex; align-items: stretch; gap: 0;
@@ -148,16 +143,13 @@
   }
   .step-card p:focus { background: rgba(255,255,255,0.04); }
 
-  /* CONNECTOR */
   .connector { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 0 6px; min-width: 36px; }
   .conn-line { width: 100%; height: 2px; background: var(--border); position: relative; }
   .conn-line::after { content: '▶'; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); font-size: 9px; color: var(--muted); }
 
-  /* LOOPBACK */
   .loopback { display: flex; justify-content: center; margin-bottom: 30px; animation: fadeUp 0.5s ease 0.4s both; }
   .loop-box { background: rgba(239,68,68,0.07); border: 1px dashed rgba(239,68,68,0.35); border-radius: 10px; padding: 10px 18px; font-size: 12px; color: var(--danger); max-width: 700px; text-align: center; }
 
-  /* BOTTOM */
   .bottom { display: flex; gap: 24px; align-items: flex-start; animation: fadeUp 0.5s ease 0.5s both; }
   .slack-col { flex: 1.2; }
   .notes-col { flex: 1; }
@@ -177,7 +169,6 @@
   .why-box { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--accent2); border-radius: 0 10px 10px 0; padding: 12px 14px; font-size: 12px; color: #9ca3af; line-height: 1.6; }
   .why-box h4 { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--accent2); margin-bottom: 5px; }
 
-  /* ===== MODALS ===== */
   .modal-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.75); z-index: 100;
@@ -205,7 +196,6 @@
   .btn-confirm.green { background: var(--success); color: #0d1a14; }
   .btn-confirm.purple { background: var(--accent2); }
 
-  /* Theme picker row */
   .theme-select-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .theme-opt {
     display: flex; align-items: center; gap: 6px;
@@ -216,7 +206,6 @@
   .theme-opt.selected { border-color: var(--accent); }
   .theme-opt .t-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 
-  /* Color picker in theme modal */
   .color-row { display: flex; gap: 10px; align-items: center; }
   .color-row input[type="color"] { width: 44px; height: 34px; border-radius: 6px; border: 1px solid var(--border); background: transparent; cursor: pointer; padding: 2px; }
   .color-preview {
@@ -226,7 +215,6 @@
     transition: background 0.2s, border-color 0.2s, color 0.2s;
   }
 
-  /* Manage themes list */
   .theme-list-item {
     display: flex; align-items: center; gap: 10px;
     padding: 8px 10px; border-radius: 8px; background: #13151c;
@@ -238,16 +226,12 @@
   .theme-list-item .tl-del:hover { opacity: 1; }
   .theme-list-item.builtin .tl-del { opacity: 0.2; cursor: not-allowed; }
 
-  /* Save name input row */
   .save-input-row { display: flex; gap: 8px; }
   .save-input-row input { flex: 1; background: #13151c; border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; }
   .save-input-row input:focus { border-color: var(--success); }
 
-  /* PASSWORD MODAL */
   .pw-error { color: var(--danger); font-size: 12px; margin-top: 6px; display: none; }
-  .pw-timer { font-size: 11px; color: var(--success); margin-top: 8px; text-align: center; display: none; }
 
-  /* Toast */
   .toast {
     position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
     background: #1c1f2a; border: 1px solid var(--border); border-radius: 10px;
@@ -282,7 +266,6 @@
     <button class="btn btn-red" onclick="resetSteps()">↺ Reset</button>
   </div>
 
-  <!-- SAVES TRAY -->
   <div class="saves-tray" id="saves-tray">
     <span class="tray-label">Saved configs:</span>
     <div id="saves-list" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"></div>
@@ -336,7 +319,7 @@
 
 </div>
 
-<!-- ===== ADD STEP MODAL ===== -->
+<!-- ADD STEP MODAL -->
 <div class="modal-overlay" id="modal-add-step">
   <div class="modal">
     <h3>➕ Add New Step</h3>
@@ -367,7 +350,7 @@
   </div>
 </div>
 
-<!-- ===== MANAGE THEMES MODAL ===== -->
+<!-- MANAGE THEMES MODAL -->
 <div class="modal-overlay" id="modal-manage-themes">
   <div class="modal">
     <h3>🎨 Manage Themes</h3>
@@ -393,7 +376,7 @@
   </div>
 </div>
 
-<!-- ===== SAVE MODAL ===== -->
+<!-- SAVE MODAL -->
 <div class="modal-overlay" id="modal-save">
   <div class="modal">
     <h3>💾 Save Configuration</h3>
@@ -403,7 +386,7 @@
         <input type="text" id="save-name" placeholder="e.g. v2 Proposal, Q1 Process…">
       </div>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:14px;">Saved locally in your browser. Will persist when you reopen this file.</p>
+    <p style="font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:14px;">Saved to cloud — accessible from any device.</p>
     <div class="modal-actions">
       <button class="btn-cancel-m" onclick="closeModal('save')">Cancel</button>
       <button class="btn-confirm green" onclick="saveConfig()">Save</button>
@@ -411,7 +394,7 @@
   </div>
 </div>
 
-<!-- ===== PASSWORD MODAL ===== -->
+<!-- PASSWORD MODAL -->
 <div class="modal-overlay" id="modal-password">
   <div class="modal" style="width:340px;">
     <h3>🔒 Enter Password to Save</h3>
@@ -430,22 +413,27 @@
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
 // ============================================================
+// SUPABASE CONFIG
+// ============================================================
+const SUPABASE_URL  = 'https://kiwcyfscjomenhlheqvx.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpd2N5ZnNjam9tZW5obGhlcXZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5NzcxMzUsImV4cCI6MjA4NzU1MzEzNX0.Mj5XDUhmeAUjtunX5VsVdPAiozO67qdFXZPEYSgYjoc';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ============================================================
 // PASSWORD / SESSION
 // ============================================================
-const CORRECT_PASSWORD   = '2479';
-const SESSION_DURATION   = 5 * 60 * 1000; // 5 minutes in ms
-let   sessionUnlockedAt  = null;
-let   pendingAfterAuth   = null;
+const CORRECT_PASSWORD  = '2479';
+const SESSION_DURATION  = 5 * 60 * 1000;
+let   sessionUnlockedAt = null;
+let   pendingAfterAuth  = null;
 
 function isSessionValid() {
   return sessionUnlockedAt !== null && (Date.now() - sessionUnlockedAt) < SESSION_DURATION;
 }
-
 function requirePassword(callback) {
   if (isSessionValid()) { callback(); return; }
   pendingAfterAuth = callback;
@@ -454,14 +442,12 @@ function requirePassword(callback) {
   document.getElementById('modal-password').classList.add('open');
   setTimeout(() => document.getElementById('pw-input').focus(), 50);
 }
-
 function submitPassword() {
   const val = document.getElementById('pw-input').value;
   if (val === CORRECT_PASSWORD) {
     sessionUnlockedAt = Date.now();
     document.getElementById('modal-password').classList.remove('open');
-    const remaining = Math.round(SESSION_DURATION / 60000);
-    toast(`✅ Unlocked — session valid for ${remaining} min`);
+    toast(`✅ Unlocked — session valid for ${Math.round(SESSION_DURATION/60000)} min`);
     if (pendingAfterAuth) { pendingAfterAuth(); pendingAfterAuth = null; }
   } else {
     document.getElementById('pw-error').style.display = 'block';
@@ -474,19 +460,19 @@ function submitPassword() {
 // DATA
 // ============================================================
 const BUILTIN_THEMES = [
-  { id: 'designer', name: 'Designer / Writer', color: '#a78bfa' },
-  { id: 'crm',      name: 'CRM',               color: '#4f8ef7' },
-  { id: 'decision', name: 'Decision Point',     color: '#fbbf24' },
-  { id: 'slack',    name: 'CRM → Slack',        color: '#34d399' },
-  { id: 'approver', name: 'Requestor / Approver', color: '#f87171' },
+  { id: 'designer', name: 'Designer / Writer',    color: '#a78bfa' },
+  { id: 'crm',      name: 'CRM',                  color: '#4f8ef7' },
+  { id: 'decision', name: 'Decision Point',        color: '#fbbf24' },
+  { id: 'slack',    name: 'CRM → Slack',           color: '#34d399' },
+  { id: 'approver', name: 'Requestor / Approver',  color: '#f87171' },
 ];
 
 const DEFAULT_STEPS = [
-  { role: 'Designer / Writer', title: 'Content Ready for Review',   desc: 'Posts comment on Asana subtask (Graphics or Copy) notifying CRM it\'s ready.',         themeId: 'designer' },
-  { role: 'CRM',               title: 'CRM Internal Review',        desc: 'Reviews work in Asana. First quality check before it reaches the approver.',            themeId: 'crm'      },
-  { role: 'Decision',          title: 'Changes Needed?',            desc: '↩ Yes: Task back to "In Progress"\n→ No: Proceed to next step',                        themeId: 'decision' },
-  { role: 'CRM → Slack',       title: 'Post to #content-approvals', desc: 'Mockup + Asana links posted in Slack, tagging the requestor/approver.',                 themeId: 'slack'    },
-  { role: 'Requestor / Approver', title: 'Feedback in Asana Only',  desc: 'Clicks Asana link from Slack. All feedback goes in Asana. Slack comments disabled.',    themeId: 'approver' },
+  { role: 'Designer / Writer',    title: 'Content Ready for Review',   desc: "Posts comment on Asana subtask (Graphics or Copy) notifying CRM it's ready.",       themeId: 'designer' },
+  { role: 'CRM',                  title: 'CRM Internal Review',        desc: 'Reviews work in Asana. First quality check before it reaches the approver.',          themeId: 'crm'      },
+  { role: 'Decision',             title: 'Changes Needed?',            desc: '↩ Yes: Task back to "In Progress"\n→ No: Proceed to next step',                      themeId: 'decision' },
+  { role: 'CRM → Slack',          title: 'Post to #content-approvals', desc: 'Mockup + Asana links posted in Slack, tagging the requestor/approver.',               themeId: 'slack'    },
+  { role: 'Requestor / Approver', title: 'Feedback in Asana Only',     desc: 'Clicks Asana link from Slack. All feedback goes in Asana. Slack comments disabled.',  themeId: 'approver' },
 ];
 
 let steps = JSON.parse(JSON.stringify(DEFAULT_STEPS));
@@ -495,44 +481,53 @@ let dragSrcIndex = null;
 let selectedNewThemeId = 'designer';
 
 // ============================================================
-// LOCAL STORAGE
+// LOCAL STORAGE (themes only)
 // ============================================================
-const LS_KEY = 'cap_saves';
 const LS_THEMES = 'cap_themes';
 
 function loadThemesFromStorage() {
-  const raw = localStorage.getItem(LS_THEMES);
-  if (raw) {
-    try {
-      const custom = JSON.parse(raw);
-      custom.forEach(t => { if (!themes.find(x => x.id === t.id)) themes.push(t); });
-    } catch(e) {}
-  }
+  try {
+    const custom = JSON.parse(localStorage.getItem(LS_THEMES) || '[]');
+    custom.forEach(t => { if (!themes.find(x => x.id === t.id)) themes.push(t); });
+  } catch(e) {}
 }
-
 function saveThemesToStorage() {
   const custom = themes.filter(t => !BUILTIN_THEMES.find(b => b.id === t.id));
   localStorage.setItem(LS_THEMES, JSON.stringify(custom));
 }
 
-function getSaves() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch(e) { return {}; }
+// ============================================================
+// SUPABASE SAVE / LOAD
+// ============================================================
+async function getSaves() {
+  const { data, error } = await db
+    .from('configurations')
+    .select('name, steps, themes')
+    .order('created_at', { ascending: false });
+  if (error) { console.error('getSaves:', error); return {}; }
+  const result = {};
+  data.forEach(row => { result[row.name] = { steps: row.steps, themes: row.themes || [] }; });
+  return result;
 }
 
-function saveConfig() {
+async function saveConfig() {
   const name = document.getElementById('save-name').value.trim();
   if (!name) { toast('Enter a name first'); return; }
-  const saves = getSaves();
-  saves[name] = { steps: JSON.parse(JSON.stringify(steps)), themes: themes.filter(t => !BUILTIN_THEMES.find(b => b.id === t.id)) };
-  localStorage.setItem(LS_KEY, JSON.stringify(saves));
+  const { error } = await db.from('configurations').upsert({
+    name,
+    steps: JSON.parse(JSON.stringify(steps)),
+    themes: themes.filter(t => !BUILTIN_THEMES.find(b => b.id === t.id)),
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'name' });
+  if (error) { toast('❌ Save failed: ' + error.message); return; }
   closeModal('save');
   document.getElementById('save-name').value = '';
   toast('✅ Saved: ' + name);
   renderSavesList();
 }
 
-function loadConfig(name) {
-  const saves = getSaves();
+async function loadConfig(name) {
+  const saves = await getSaves();
   if (!saves[name]) return;
   const saved = saves[name];
   steps = JSON.parse(JSON.stringify(saved.steps));
@@ -546,17 +541,17 @@ function loadConfig(name) {
   toast('📂 Loaded: ' + name);
 }
 
-function deleteConfig(name) {
-  const saves = getSaves();
-  delete saves[name];
-  localStorage.setItem(LS_KEY, JSON.stringify(saves));
+async function deleteConfig(name) {
+  const { error } = await db.from('configurations').delete().eq('name', name);
+  if (error) { toast('❌ Delete failed'); return; }
   renderSavesList();
   toast('🗑 Deleted: ' + name);
 }
 
-function renderSavesList() {
+async function renderSavesList() {
   const container = document.getElementById('saves-list');
-  const saves = getSaves();
+  container.innerHTML = '<span class="saves-empty">Loading…</span>';
+  const saves = await getSaves();
   const keys = Object.keys(saves);
   if (!keys.length) {
     container.innerHTML = '<span class="saves-empty">No saved configurations yet.</span>';
@@ -575,31 +570,23 @@ function renderSavesList() {
 // THEMES
 // ============================================================
 function getTheme(id) { return themes.find(t => t.id === id) || themes[0]; }
-
 function hexToRgb(hex) {
-  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-  return {r,g,b};
+  return { r: parseInt(hex.slice(1,3),16), g: parseInt(hex.slice(3,5),16), b: parseInt(hex.slice(5,7),16) };
 }
-
 function applyThemeToCard(card, themeId) {
   const t = getTheme(themeId);
-  const c = t.color;
-  const {r,g,b} = hexToRgb(c);
+  const {r,g,b} = hexToRgb(t.color);
   card.style.borderColor = `rgba(${r},${g},${b},0.0)`;
-
   const num = card.querySelector('.step-num');
   num.style.background = `rgba(${r},${g},${b},0.15)`;
-  num.style.borderColor = c;
-  num.style.color = c;
-
+  num.style.borderColor = t.color;
+  num.style.color = t.color;
   const tag = card.querySelector('.role-tag');
   tag.style.background = `rgba(${r},${g},${b},0.12)`;
-  tag.style.color = c;
-
+  tag.style.color = t.color;
   card.onmouseenter = () => { card.style.borderColor = `rgba(${r},${g},${b},0.7)`; };
   card.onmouseleave = () => { card.style.borderColor = `rgba(${r},${g},${b},0.0)`; };
 }
-
 function renderLegend() {
   const el = document.getElementById('legend');
   el.innerHTML = '';
@@ -615,39 +602,32 @@ function renderLegend() {
     }
   });
 }
-
 function updateColorPreview() {
   const color = document.getElementById('nt-color').value;
-  const prev = document.getElementById('nt-preview');
   const {r,g,b} = hexToRgb(color);
+  const prev = document.getElementById('nt-preview');
   prev.style.background = `rgba(${r},${g},${b},0.15)`;
   prev.style.borderColor = color;
   prev.style.color = color;
 }
-
 function createTheme() {
   const name = document.getElementById('nt-name').value.trim();
   if (!name) { toast('Enter a theme name'); return; }
   const color = document.getElementById('nt-color').value;
-  const id = 'custom_' + Date.now();
-  themes.push({ id, name, color });
+  themes.push({ id: 'custom_' + Date.now(), name, color });
   saveThemesToStorage();
   document.getElementById('nt-name').value = '';
   renderThemeList();
   toast('🎨 Theme created: ' + name);
 }
-
 function deleteTheme(id) {
   if (BUILTIN_THEMES.find(t => t.id === id)) { toast('Built-in themes cannot be deleted'); return; }
   themes = themes.filter(t => t.id !== id);
   steps.forEach(s => { if (s.themeId === id) s.themeId = 'crm'; });
   saveThemesToStorage();
-  renderThemeList();
-  renderFlow();
-  renderLegend();
+  renderThemeList(); renderFlow(); renderLegend();
   toast('Theme deleted');
 }
-
 function renderThemeList() {
   const c = document.getElementById('theme-list-container');
   c.innerHTML = '';
@@ -658,13 +638,14 @@ function renderThemeList() {
     item.innerHTML = `
       <div class="tl-dot" style="background:${t.color}"></div>
       <div class="tl-name">${t.name}</div>
-      ${isBuiltin ? '<span class="tl-del" title="Built-in, cannot delete" style="cursor:default">🔒</span>' : `<span class="tl-del" onclick="deleteTheme('${t.id}')" title="Delete theme">×</span>`}
+      ${isBuiltin
+        ? '<span class="tl-del" style="cursor:default">🔒</span>'
+        : `<span class="tl-del" onclick="deleteTheme('${t.id}')">×</span>`}
     `;
     c.appendChild(item);
   });
 }
-
-function buildThemeSelectRow(containerId, onSelect) {
+function buildThemeSelectRow(containerId) {
   const row = document.getElementById(containerId);
   row.innerHTML = '';
   themes.forEach(t => {
@@ -675,7 +656,6 @@ function buildThemeSelectRow(containerId, onSelect) {
       selectedNewThemeId = t.id;
       row.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('selected'));
       opt.classList.add('selected');
-      if (onSelect) onSelect(t.id);
     };
     row.appendChild(opt);
   });
@@ -687,7 +667,6 @@ function buildThemeSelectRow(containerId, onSelect) {
 function renderFlow() {
   const flow = document.getElementById('flow');
   flow.innerHTML = '';
-
   steps.forEach((step, i) => {
     const node = document.createElement('div');
     node.className = 'node';
@@ -697,26 +676,22 @@ function renderFlow() {
     card.className = 'step-card';
     card.draggable = true;
 
-    // Delete
     const del = document.createElement('div');
     del.className = 'delete-btn';
     del.textContent = '×';
     del.onclick = (e) => { e.stopPropagation(); removeStep(i); };
     card.appendChild(del);
 
-    // Handle
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
     handle.textContent = '⠿';
     card.appendChild(handle);
 
-    // Number
     const num = document.createElement('div');
     num.className = 'step-num';
     num.textContent = i + 1;
     card.appendChild(num);
 
-    // Role tag
     const roleEl = document.createElement('div');
     roleEl.className = 'role-tag';
     roleEl.contentEditable = true;
@@ -724,14 +699,12 @@ function renderFlow() {
     roleEl.oninput = () => { steps[i].role = roleEl.textContent; renderLegend(); };
     card.appendChild(roleEl);
 
-    // Title
     const titleEl = document.createElement('h3');
     titleEl.contentEditable = true;
     titleEl.textContent = step.title;
     titleEl.oninput = () => { steps[i].title = titleEl.textContent; };
     card.appendChild(titleEl);
 
-    // Desc
     const descEl = document.createElement('p');
     descEl.contentEditable = true;
     descEl.textContent = step.desc;
@@ -740,7 +713,6 @@ function renderFlow() {
 
     applyThemeToCard(card, step.themeId);
 
-    // Drag events
     card.addEventListener('dragstart', (e) => {
       dragSrcIndex = i;
       setTimeout(() => card.style.opacity = '0.35', 0);
@@ -763,14 +735,12 @@ function renderFlow() {
         const moved = steps.splice(dragSrcIndex, 1)[0];
         steps.splice(i, 0, moved);
         dragSrcIndex = null;
-        renderFlow();
-        renderLegend();
+        renderFlow(); renderLegend();
       }
     });
 
     node.appendChild(card);
 
-    // Connector
     if (i < steps.length - 1) {
       const conn = document.createElement('div');
       conn.className = 'connector';
@@ -790,20 +760,15 @@ function renderFlow() {
 function removeStep(i) {
   if (steps.length <= 1) { toast('Need at least one step'); return; }
   steps.splice(i, 1);
-  renderFlow();
-  renderLegend();
+  renderFlow(); renderLegend();
 }
-
 function resetSteps() {
   steps = JSON.parse(JSON.stringify(DEFAULT_STEPS));
   themes = JSON.parse(JSON.stringify(BUILTIN_THEMES));
-  const custom = JSON.parse(localStorage.getItem(LS_THEMES) || '[]');
-  custom.forEach(t => themes.push(t));
-  renderFlow();
-  renderLegend();
+  JSON.parse(localStorage.getItem(LS_THEMES) || '[]').forEach(t => themes.push(t));
+  renderFlow(); renderLegend();
   toast('↺ Reset to default');
 }
-
 function addStep() {
   const role  = document.getElementById('ns-role').value.trim() || 'New Role';
   const title = document.getElementById('ns-title').value.trim() || 'New Step';
@@ -811,8 +776,7 @@ function addStep() {
   const pos   = parseInt(document.getElementById('ns-position').value);
   steps.splice(pos, 0, { role, title, desc, themeId: selectedNewThemeId });
   closeModal('add-step');
-  renderFlow();
-  renderLegend();
+  renderFlow(); renderLegend();
   toast('Step added');
 }
 
@@ -835,41 +799,30 @@ function openModal(id) {
     });
     sel.value = steps.length;
   }
-  if (id === 'manage-themes') {
-    renderThemeList();
-    updateColorPreview();
-  }
+  if (id === 'manage-themes') { renderThemeList(); updateColorPreview(); }
   document.getElementById('modal-' + id).classList.add('open');
 }
-
 function closeModal(id) {
   document.getElementById('modal-' + id).classList.remove('open');
 }
-
 function openSaveTray() {
   closeSaveTray();
   requirePassword(() => openModal('save'));
 }
-
-function toggleLoadTray() {
+async function toggleLoadTray() {
   const tray = document.getElementById('saves-tray');
   if (tray.classList.contains('open')) {
     closeSaveTray();
   } else {
-    renderSavesList();
     tray.classList.add('open');
+    await renderSavesList();
   }
 }
-
 function closeSaveTray() {
   document.getElementById('saves-tray').classList.remove('open');
 }
-
-// Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', (e) => {
-    if (e.target === el) el.classList.remove('open');
-  });
+  el.addEventListener('click', (e) => { if (e.target === el) el.classList.remove('open'); });
 });
 
 // ============================================================
