@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Approval Process</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --border: #252830;
+    --accent: #4f8ef7;
+    --accent2: #a78bfa;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --card: #1c1f2a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 36px 40px 60px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .page { width: 100%; max-width: 1100px; }
+
+  /* HEADER */
+  .header { text-align: center; margin-bottom: 32px; animation: fadeDown 0.6s ease both; }
+  .header .label { font-family: 'Syne', sans-serif; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(20px, 2.8vw, 30px);
+    font-weight: 800; white-space: nowrap;
+    background: linear-gradient(135deg, #fff 40%, #4f8ef7);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .header p { margin-top: 8px; color: var(--muted); font-size: 13px; }
+
+  /* LEGEND */
+  .legend { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 22px; animation: fadeDown 0.5s ease 0.1s both; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; animation: fadeDown 0.5s ease 0.15s both; }
+  .btn {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); padding: 7px 14px; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; display: flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { border-color: var(--accent); background: rgba(79,142,247,0.08); }
+  .btn.btn-green:hover { border-color: var(--success); background: rgba(52,211,153,0.08); }
+  .btn.btn-purple:hover { border-color: var(--accent2); background: rgba(167,139,250,0.08); }
+  .btn.btn-red:hover { border-color: var(--danger); background: rgba(248,113,113,0.08); }
+  .btn-sep { width: 1px; background: var(--border); margin: 0 2px; }
+
+  /* SAVES TRAY */
+  .saves-tray {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 18px; display: none; flex-wrap: wrap; gap: 8px; align-items: center;
+    animation: fadeDown 0.3s ease both;
+  }
+  .saves-tray.open { display: flex; }
+  .saves-tray .tray-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-right: 4px; white-space: nowrap; }
+  .save-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: #13151c; border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 10px; font-size: 12px; cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .save-chip:hover { border-color: var(--accent); }
+  .save-chip .chip-del { color: var(--danger); font-size: 13px; line-height: 1; margin-left: 2px; opacity: 0.5; }
+  .save-chip .chip-del:hover { opacity: 1; }
+  .saves-empty { font-size: 12px; color: var(--muted); font-style: italic; }
+
+  /* EDIT HINT */
+  .edit-hint { text-align: center; font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+  .edit-hint span { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 10px; }
+
+  /* FLOW */
+  .flow-wrapper { overflow-x: auto; padding-bottom: 8px; margin-bottom: 14px; }
+  #flow {
+    display: flex; align-items: stretch; gap: 0;
+    min-width: max-content;
+    animation: fadeUp 0.6s ease 0.2s both;
+    padding: 8px 4px 12px;
+  }
+
+  .node { display: flex; align-items: center; }
+  .node.drag-over .step-card { transform: translateY(-6px) scale(1.02); box-shadow: 0 0 0 2px rgba(79,142,247,0.4); }
+
+  .step-card {
+    width: 162px; flex-shrink: 0;
+    background: var(--card); border: 2px solid var(--border);
+    border-radius: 14px; padding: 14px 13px 14px 13px;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    cursor: grab; position: relative; user-select: none;
+  }
+  .step-card:active { cursor: grabbing; }
+  .step-card:hover { transform: translateY(-3px); }
+
+  .drag-handle { position: absolute; top: 8px; right: 8px; color: var(--muted); font-size: 13px; opacity: 0.35; }
+  .step-card:hover .drag-handle { opacity: 0.7; }
+
+  .delete-btn {
+    position: absolute; top: 8px; left: 8px;
+    width: 17px; height: 17px; border-radius: 50%;
+    background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+    color: var(--danger); font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; opacity: 0; transition: opacity 0.2s;
+  }
+  .step-card:hover .delete-btn { opacity: 1; }
+
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 11px;
+    margin-bottom: 7px; border: 2px solid;
+  }
+
+  .role-tag {
+    font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 20px; margin-bottom: 6px; display: inline-block;
+    outline: none;
+  }
+  .role-tag:focus { outline: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; }
+
+  .step-card h3 {
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+    color: #fff; margin-bottom: 4px; line-height: 1.3;
+    outline: none; border-radius: 3px; padding: 1px 2px;
+  }
+  .step-card h3:focus { background: rgba(255,255,255,0.06); }
+  .step-card p {
+    font-size: 11px; color: #9ca3af; line-height: 1.5;
+    outline: none; border-radius: 3px; padding: 1px 2px;
+  }
+  .step-card p:focus { background: rgba(255,255,255,0.04); }
+
+  /* CONNECTOR */
+  .connector { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 0 6px; min-width: 36px; }
+  .conn-line { width: 100%; height: 2px; background: var(--border); position: relative; }
+  .conn-line::after { content: '▶'; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); font-size: 9px; color: var(--muted); }
+
+  /* LOOPBACK */
+  .loopback { display: flex; justify-content: center; margin-bottom: 30px; animation: fadeUp 0.5s ease 0.4s both; }
+  .loop-box { background: rgba(239,68,68,0.07); border: 1px dashed rgba(239,68,68,0.35); border-radius: 10px; padding: 10px 18px; font-size: 12px; color: var(--danger); max-width: 700px; text-align: center; }
+
+  /* BOTTOM */
+  .bottom { display: flex; gap: 24px; align-items: flex-start; animation: fadeUp 0.5s ease 0.5s both; }
+  .slack-col { flex: 1.2; }
+  .notes-col { flex: 1; }
+  .section-label { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .slack-mockup { background: #1a1d21; border: 1px solid #2a2d32; border-radius: 12px; padding: 14px 16px; font-size: 12px; }
+  .sm-header { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; padding-bottom: 9px; border-bottom: 1px solid #2a2d32; }
+  .sm-avatar { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: white; flex-shrink: 0; }
+  .sm-name { font-weight: 600; color: #e8eaf0; font-size: 12px; }
+  .sm-channel { color: var(--muted); font-size: 10px; }
+  .sm-body { color: #9ca3af; line-height: 1.8; font-size: 11.5px; }
+  .sm-body .mention { color: var(--accent); font-weight: 500; }
+  .sm-body .link { color: var(--accent2); font-size: 10.5px; }
+  .sm-body .divider { color: #2a2d32; }
+  .sm-image { margin-top: 10px; border-radius: 8px; background: linear-gradient(135deg, #252830, #1c1f2a); height: 54px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 11px; border: 1px solid var(--border); }
+  .sm-disabled { margin-top: 7px; font-size: 10px; color: #ef4444; opacity: 0.8; }
+  .note-box { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--success); border-radius: 0 10px 10px 0; padding: 12px 14px; font-size: 12px; color: #9ca3af; line-height: 1.6; margin-bottom: 12px; }
+  .why-box { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--accent2); border-radius: 0 10px 10px 0; padding: 12px 14px; font-size: 12px; color: #9ca3af; line-height: 1.6; }
+  .why-box h4 { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--accent2); margin-bottom: 5px; }
+
+  /* ===== MODALS ===== */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #1c1f2a; border: 1px solid var(--border); border-radius: 16px;
+    padding: 26px; width: 400px; max-width: 92vw; max-height: 90vh; overflow-y: auto;
+    animation: fadeDown 0.3s ease both;
+  }
+  .modal h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 5px; }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%; background: #13151c; border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 11px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); }
+  .form-group textarea { resize: vertical; min-height: 68px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+  .btn-cancel-m { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+  .btn-confirm { background: var(--accent); border: none; color: #fff; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; }
+  .btn-confirm.green { background: var(--success); color: #0d1a14; }
+  .btn-confirm.purple { background: var(--accent2); }
+
+  /* Theme picker row */
+  .theme-select-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .theme-opt {
+    display: flex; align-items: center; gap: 6px;
+    background: #13151c; border: 2px solid var(--border);
+    border-radius: 8px; padding: 7px 10px; cursor: pointer;
+    font-size: 11px; transition: border-color 0.15s;
+  }
+  .theme-opt.selected { border-color: var(--accent); }
+  .theme-opt .t-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Color picker in theme modal */
+  .color-row { display: flex; gap: 10px; align-items: center; }
+  .color-row input[type="color"] { width: 44px; height: 34px; border-radius: 6px; border: 1px solid var(--border); background: transparent; cursor: pointer; padding: 2px; }
+  .color-preview {
+    flex: 1; height: 34px; border-radius: 8px; border: 2px solid;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+
+  /* Manage themes list */
+  .theme-list-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; background: #13151c;
+    border: 1px solid var(--border); margin-bottom: 6px;
+  }
+  .theme-list-item .tl-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .theme-list-item .tl-name { flex: 1; font-size: 12px; }
+  .theme-list-item .tl-del { color: var(--danger); cursor: pointer; font-size: 16px; opacity: 0.5; }
+  .theme-list-item .tl-del:hover { opacity: 1; }
+  .theme-list-item.builtin .tl-del { opacity: 0.2; cursor: not-allowed; }
+
+  /* Save name input row */
+  .save-input-row { display: flex; gap: 8px; }
+  .save-input-row input { flex: 1; background: #13151c; border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; }
+  .save-input-row input:focus { border-color: var(--success); }
+
+  /* PASSWORD MODAL */
+  .pw-error { color: var(--danger); font-size: 12px; margin-top: 6px; display: none; }
+  .pw-timer { font-size: 11px; color: var(--success); margin-top: 8px; text-align: center; display: none; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #1c1f2a; border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 20px; font-size: 13px; color: var(--text);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s;
+    z-index: 200; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-14px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="label">Workflow Documentation</div>
+    <h1>Content Approval Process</h1>
+    <p>From creation to final approval — one source of truth in Asana</p>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="toolbar">
+    <button class="btn" onclick="openModal('add-step')">＋ Add Step</button>
+    <button class="btn btn-purple" onclick="openModal('manage-themes')">🎨 Themes</button>
+    <div class="btn-sep"></div>
+    <button class="btn btn-green" onclick="openSaveTray()">💾 Save</button>
+    <button class="btn" onclick="toggleLoadTray()">📂 Load</button>
+    <div class="btn-sep"></div>
+    <button class="btn btn-red" onclick="resetSteps()">↺ Reset</button>
+  </div>
+
+  <!-- SAVES TRAY -->
+  <div class="saves-tray" id="saves-tray">
+    <span class="tray-label">Saved configs:</span>
+    <div id="saves-list" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"></div>
+  </div>
+
+  <div class="edit-hint">✏️ Click title or description to edit &nbsp;·&nbsp; <span>drag</span> to reorder &nbsp;·&nbsp; numbers auto-update</div>
+
+  <div class="flow-wrapper">
+    <div id="flow"></div>
+  </div>
+
+  <div class="loopback">
+    <div class="loop-box">
+      ↩ <strong>If Approver requests changes:</strong> Flow loops back to Step 1 — Designer/Writer applies updates and resubmits via Asana comment.
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="slack-col">
+      <div class="section-label" style="color:var(--success)">💬 Example Slack Message</div>
+      <div class="slack-mockup">
+        <div class="sm-header">
+          <div class="sm-avatar">PM</div>
+          <div>
+            <div class="sm-name">Patricio Melendez</div>
+            <div class="sm-channel"># content-approvals · 09:50</div>
+          </div>
+        </div>
+        <div class="sm-body">
+          <span class="divider">————————————————————————————</span><br>
+          New Content Request Feedback Request:<br>
+          <span class="divider">————————————————————————————</span><br>
+          Requestor Approver: <span class="mention">@Patricio Melendez</span><br>
+          <strong>Title:</strong> $30,000 Points Clash<br>
+          <strong>Subtitle:</strong> Climb the leaderboard with DuelReels!<br>
+          <strong>Page:</strong> <span class="link">roobet.com/promotions/30k-points-clash</span><br>
+          <strong>CTA:</strong> <span class="link">roobet.com/casino/tag/duel-reels-30k-points-clash...</span><br>
+          TO PROVIDE FEEDBACK FOR <span class="mention">GRAPHICS</span><br>
+          TO PROVIDE FEEDBACK FOR <span class="mention">COPY</span>
+        </div>
+        <div class="sm-image">🖼 Mockup / Promotional Banner Preview</div>
+        <div class="sm-disabled">🔒 Comments disabled — provide all feedback in Asana only.</div>
+      </div>
+    </div>
+    <div class="notes-col">
+      <div class="section-label" style="color:var(--accent)">📋 Notes</div>
+      <div class="note-box"><strong style="color:#e8eaf0;">Slack message includes:</strong><br>Tag to requestor/approver · Mockup (graphics + copy, or whichever applies) · Direct Asana subtask links for Graphics and/or Copy feedback.</div>
+      <div class="why-box"><h4>📌 Why Asana as single source of truth?</h4>Slack deletes messages older than 3 months. Asana keeps a permanent, searchable record for retrospectives, lessons learned, and audits.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== ADD STEP MODAL ===== -->
+<div class="modal-overlay" id="modal-add-step">
+  <div class="modal">
+    <h3>➕ Add New Step</h3>
+    <div class="form-group">
+      <label>Role / Team</label>
+      <input type="text" id="ns-role" placeholder="e.g. Legal, QA, Manager…">
+    </div>
+    <div class="form-group">
+      <label>Step Title</label>
+      <input type="text" id="ns-title" placeholder="e.g. Legal Review">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="ns-desc" placeholder="Describe what happens in this step…"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Color Theme</label>
+      <div class="theme-select-row" id="ns-theme-row"></div>
+    </div>
+    <div class="form-group">
+      <label>Insert Position</label>
+      <select id="ns-position"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel-m" onclick="closeModal('add-step')">Cancel</button>
+      <button class="btn-confirm" onclick="addStep()">Add Step</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MANAGE THEMES MODAL ===== -->
+<div class="modal-overlay" id="modal-manage-themes">
+  <div class="modal">
+    <h3>🎨 Manage Themes</h3>
+    <div id="theme-list-container" style="margin-bottom:18px;"></div>
+    <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:12px;">Create New Theme</div>
+      <div class="form-group">
+        <label>Theme Name</label>
+        <input type="text" id="nt-name" placeholder="e.g. Legal Team">
+      </div>
+      <div class="form-group">
+        <label>Accent Color</label>
+        <div class="color-row">
+          <input type="color" id="nt-color" value="#4f8ef7" oninput="updateColorPreview()">
+          <div class="color-preview" id="nt-preview">Preview</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel-m" onclick="closeModal('manage-themes')">Close</button>
+      <button class="btn-confirm purple" onclick="createTheme()">Create Theme</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SAVE MODAL ===== -->
+<div class="modal-overlay" id="modal-save">
+  <div class="modal">
+    <h3>💾 Save Configuration</h3>
+    <div class="form-group">
+      <label>Configuration Name</label>
+      <div class="save-input-row">
+        <input type="text" id="save-name" placeholder="e.g. v2 Proposal, Q1 Process…">
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:14px;">Saved locally in your browser. Will persist when you reopen this file.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel-m" onclick="closeModal('save')">Cancel</button>
+      <button class="btn-confirm green" onclick="saveConfig()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PASSWORD MODAL ===== -->
+<div class="modal-overlay" id="modal-password">
+  <div class="modal" style="width:340px;">
+    <h3>🔒 Enter Password to Save</h3>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="pw-input" placeholder="••••" maxlength="20"
+             onkeydown="if(event.key==='Enter') submitPassword()"
+             style="letter-spacing:4px; font-size:18px;">
+      <div class="pw-error" id="pw-error">Incorrect password. Try again.</div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:-6px;">Session stays unlocked for 5 minutes after a correct entry.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel-m" onclick="closeModal('password')">Cancel</button>
+      <button class="btn-confirm green" onclick="submitPassword()">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// PASSWORD / SESSION
+// ============================================================
+const CORRECT_PASSWORD   = '2479';
+const SESSION_DURATION   = 5 * 60 * 1000; // 5 minutes in ms
+let   sessionUnlockedAt  = null;
+let   pendingAfterAuth   = null;
+
+function isSessionValid() {
+  return sessionUnlockedAt !== null && (Date.now() - sessionUnlockedAt) < SESSION_DURATION;
+}
+
+function requirePassword(callback) {
+  if (isSessionValid()) { callback(); return; }
+  pendingAfterAuth = callback;
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').style.display = 'none';
+  document.getElementById('modal-password').classList.add('open');
+  setTimeout(() => document.getElementById('pw-input').focus(), 50);
+}
+
+function submitPassword() {
+  const val = document.getElementById('pw-input').value;
+  if (val === CORRECT_PASSWORD) {
+    sessionUnlockedAt = Date.now();
+    document.getElementById('modal-password').classList.remove('open');
+    const remaining = Math.round(SESSION_DURATION / 60000);
+    toast(`✅ Unlocked — session valid for ${remaining} min`);
+    if (pendingAfterAuth) { pendingAfterAuth(); pendingAfterAuth = null; }
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+// ============================================================
+// DATA
+// ============================================================
+const BUILTIN_THEMES = [
+  { id: 'designer', name: 'Designer / Writer', color: '#a78bfa' },
+  { id: 'crm',      name: 'CRM',               color: '#4f8ef7' },
+  { id: 'decision', name: 'Decision Point',     color: '#fbbf24' },
+  { id: 'slack',    name: 'CRM → Slack',        color: '#34d399' },
+  { id: 'approver', name: 'Requestor / Approver', color: '#f87171' },
+];
+
+const DEFAULT_STEPS = [
+  { role: 'Designer / Writer', title: 'Content Ready for Review',   desc: 'Posts comment on Asana subtask (Graphics or Copy) notifying CRM it\'s ready.',         themeId: 'designer' },
+  { role: 'CRM',               title: 'CRM Internal Review',        desc: 'Reviews work in Asana. First quality check before it reaches the approver.',            themeId: 'crm'      },
+  { role: 'Decision',          title: 'Changes Needed?',            desc: '↩ Yes: Task back to "In Progress"\n→ No: Proceed to next step',                        themeId: 'decision' },
+  { role: 'CRM → Slack',       title: 'Post to #content-approvals', desc: 'Mockup + Asana links posted in Slack, tagging the requestor/approver.',                 themeId: 'slack'    },
+  { role: 'Requestor / Approver', title: 'Feedback in Asana Only',  desc: 'Clicks Asana link from Slack. All feedback goes in Asana. Slack comments disabled.',    themeId: 'approver' },
+];
+
+let steps = JSON.parse(JSON.stringify(DEFAULT_STEPS));
+let themes = JSON.parse(JSON.stringify(BUILTIN_THEMES));
+let dragSrcIndex = null;
+let selectedNewThemeId = 'designer';
+
+// ============================================================
+// LOCAL STORAGE
+// ============================================================
+const LS_KEY = 'cap_saves';
+const LS_THEMES = 'cap_themes';
+
+function loadThemesFromStorage() {
+  const raw = localStorage.getItem(LS_THEMES);
+  if (raw) {
+    try {
+      const custom = JSON.parse(raw);
+      custom.forEach(t => { if (!themes.find(x => x.id === t.id)) themes.push(t); });
+    } catch(e) {}
+  }
+}
+
+function saveThemesToStorage() {
+  const custom = themes.filter(t => !BUILTIN_THEMES.find(b => b.id === t.id));
+  localStorage.setItem(LS_THEMES, JSON.stringify(custom));
+}
+
+function getSaves() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch(e) { return {}; }
+}
+
+function saveConfig() {
+  const name = document.getElementById('save-name').value.trim();
+  if (!name) { toast('Enter a name first'); return; }
+  const saves = getSaves();
+  saves[name] = { steps: JSON.parse(JSON.stringify(steps)), themes: themes.filter(t => !BUILTIN_THEMES.find(b => b.id === t.id)) };
+  localStorage.setItem(LS_KEY, JSON.stringify(saves));
+  closeModal('save');
+  document.getElementById('save-name').value = '';
+  toast('✅ Saved: ' + name);
+  renderSavesList();
+}
+
+function loadConfig(name) {
+  const saves = getSaves();
+  if (!saves[name]) return;
+  const saved = saves[name];
+  steps = JSON.parse(JSON.stringify(saved.steps));
+  if (saved.themes) {
+    saved.themes.forEach(t => { if (!themes.find(x => x.id === t.id)) themes.push(t); });
+    saveThemesToStorage();
+  }
+  closeSaveTray();
+  renderFlow();
+  renderLegend();
+  toast('📂 Loaded: ' + name);
+}
+
+function deleteConfig(name) {
+  const saves = getSaves();
+  delete saves[name];
+  localStorage.setItem(LS_KEY, JSON.stringify(saves));
+  renderSavesList();
+  toast('🗑 Deleted: ' + name);
+}
+
+function renderSavesList() {
+  const container = document.getElementById('saves-list');
+  const saves = getSaves();
+  const keys = Object.keys(saves);
+  if (!keys.length) {
+    container.innerHTML = '<span class="saves-empty">No saved configurations yet.</span>';
+    return;
+  }
+  container.innerHTML = '';
+  keys.forEach(name => {
+    const chip = document.createElement('div');
+    chip.className = 'save-chip';
+    chip.innerHTML = `<span onclick="loadConfig('${name}')">${name}</span><span class="chip-del" onclick="deleteConfig('${name}')" title="Delete">×</span>`;
+    container.appendChild(chip);
+  });
+}
+
+// ============================================================
+// THEMES
+// ============================================================
+function getTheme(id) { return themes.find(t => t.id === id) || themes[0]; }
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
+
+function applyThemeToCard(card, themeId) {
+  const t = getTheme(themeId);
+  const c = t.color;
+  const {r,g,b} = hexToRgb(c);
+  card.style.borderColor = `rgba(${r},${g},${b},0.0)`;
+
+  const num = card.querySelector('.step-num');
+  num.style.background = `rgba(${r},${g},${b},0.15)`;
+  num.style.borderColor = c;
+  num.style.color = c;
+
+  const tag = card.querySelector('.role-tag');
+  tag.style.background = `rgba(${r},${g},${b},0.12)`;
+  tag.style.color = c;
+
+  card.onmouseenter = () => { card.style.borderColor = `rgba(${r},${g},${b},0.7)`; };
+  card.onmouseleave = () => { card.style.borderColor = `rgba(${r},${g},${b},0.0)`; };
+}
+
+function renderLegend() {
+  const el = document.getElementById('legend');
+  el.innerHTML = '';
+  const seen = new Set();
+  steps.forEach(s => {
+    if (!seen.has(s.themeId)) {
+      seen.add(s.themeId);
+      const t = getTheme(s.themeId);
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `<div class="legend-dot" style="background:${t.color}"></div>${t.name}`;
+      el.appendChild(item);
+    }
+  });
+}
+
+function updateColorPreview() {
+  const color = document.getElementById('nt-color').value;
+  const prev = document.getElementById('nt-preview');
+  const {r,g,b} = hexToRgb(color);
+  prev.style.background = `rgba(${r},${g},${b},0.15)`;
+  prev.style.borderColor = color;
+  prev.style.color = color;
+}
+
+function createTheme() {
+  const name = document.getElementById('nt-name').value.trim();
+  if (!name) { toast('Enter a theme name'); return; }
+  const color = document.getElementById('nt-color').value;
+  const id = 'custom_' + Date.now();
+  themes.push({ id, name, color });
+  saveThemesToStorage();
+  document.getElementById('nt-name').value = '';
+  renderThemeList();
+  toast('🎨 Theme created: ' + name);
+}
+
+function deleteTheme(id) {
+  if (BUILTIN_THEMES.find(t => t.id === id)) { toast('Built-in themes cannot be deleted'); return; }
+  themes = themes.filter(t => t.id !== id);
+  steps.forEach(s => { if (s.themeId === id) s.themeId = 'crm'; });
+  saveThemesToStorage();
+  renderThemeList();
+  renderFlow();
+  renderLegend();
+  toast('Theme deleted');
+}
+
+function renderThemeList() {
+  const c = document.getElementById('theme-list-container');
+  c.innerHTML = '';
+  themes.forEach(t => {
+    const isBuiltin = !!BUILTIN_THEMES.find(b => b.id === t.id);
+    const item = document.createElement('div');
+    item.className = 'theme-list-item' + (isBuiltin ? ' builtin' : '');
+    item.innerHTML = `
+      <div class="tl-dot" style="background:${t.color}"></div>
+      <div class="tl-name">${t.name}</div>
+      ${isBuiltin ? '<span class="tl-del" title="Built-in, cannot delete" style="cursor:default">🔒</span>' : `<span class="tl-del" onclick="deleteTheme('${t.id}')" title="Delete theme">×</span>`}
+    `;
+    c.appendChild(item);
+  });
+}
+
+function buildThemeSelectRow(containerId, onSelect) {
+  const row = document.getElementById(containerId);
+  row.innerHTML = '';
+  themes.forEach(t => {
+    const opt = document.createElement('div');
+    opt.className = 'theme-opt' + (t.id === selectedNewThemeId ? ' selected' : '');
+    opt.innerHTML = `<div class="t-dot" style="background:${t.color}"></div><span>${t.name}</span>`;
+    opt.onclick = () => {
+      selectedNewThemeId = t.id;
+      row.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      if (onSelect) onSelect(t.id);
+    };
+    row.appendChild(opt);
+  });
+}
+
+// ============================================================
+// FLOW RENDER
+// ============================================================
+function renderFlow() {
+  const flow = document.getElementById('flow');
+  flow.innerHTML = '';
+
+  steps.forEach((step, i) => {
+    const node = document.createElement('div');
+    node.className = 'node';
+    node.dataset.index = i;
+
+    const card = document.createElement('div');
+    card.className = 'step-card';
+    card.draggable = true;
+
+    // Delete
+    const del = document.createElement('div');
+    del.className = 'delete-btn';
+    del.textContent = '×';
+    del.onclick = (e) => { e.stopPropagation(); removeStep(i); };
+    card.appendChild(del);
+
+    // Handle
+    const handle = document.createElement('div');
+    handle.className = 'drag-handle';
+    handle.textContent = '⠿';
+    card.appendChild(handle);
+
+    // Number
+    const num = document.createElement('div');
+    num.className = 'step-num';
+    num.textContent = i + 1;
+    card.appendChild(num);
+
+    // Role tag
+    const roleEl = document.createElement('div');
+    roleEl.className = 'role-tag';
+    roleEl.contentEditable = true;
+    roleEl.textContent = step.role;
+    roleEl.oninput = () => { steps[i].role = roleEl.textContent; renderLegend(); };
+    card.appendChild(roleEl);
+
+    // Title
+    const titleEl = document.createElement('h3');
+    titleEl.contentEditable = true;
+    titleEl.textContent = step.title;
+    titleEl.oninput = () => { steps[i].title = titleEl.textContent; };
+    card.appendChild(titleEl);
+
+    // Desc
+    const descEl = document.createElement('p');
+    descEl.contentEditable = true;
+    descEl.textContent = step.desc;
+    descEl.oninput = () => { steps[i].desc = descEl.textContent; };
+    card.appendChild(descEl);
+
+    applyThemeToCard(card, step.themeId);
+
+    // Drag events
+    card.addEventListener('dragstart', (e) => {
+      dragSrcIndex = i;
+      setTimeout(() => card.style.opacity = '0.35', 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', () => {
+      card.style.opacity = '1';
+      document.querySelectorAll('.node').forEach(n => n.classList.remove('drag-over'));
+    });
+    node.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.node').forEach(n => n.classList.remove('drag-over'));
+      if (dragSrcIndex !== i) node.classList.add('drag-over');
+    });
+    node.addEventListener('dragleave', () => node.classList.remove('drag-over'));
+    node.addEventListener('drop', (e) => {
+      e.preventDefault();
+      node.classList.remove('drag-over');
+      if (dragSrcIndex !== null && dragSrcIndex !== i) {
+        const moved = steps.splice(dragSrcIndex, 1)[0];
+        steps.splice(i, 0, moved);
+        dragSrcIndex = null;
+        renderFlow();
+        renderLegend();
+      }
+    });
+
+    node.appendChild(card);
+
+    // Connector
+    if (i < steps.length - 1) {
+      const conn = document.createElement('div');
+      conn.className = 'connector';
+      const line = document.createElement('div');
+      line.className = 'conn-line';
+      conn.appendChild(line);
+      node.appendChild(conn);
+    }
+
+    flow.appendChild(node);
+  });
+}
+
+// ============================================================
+// STEP ACTIONS
+// ============================================================
+function removeStep(i) {
+  if (steps.length <= 1) { toast('Need at least one step'); return; }
+  steps.splice(i, 1);
+  renderFlow();
+  renderLegend();
+}
+
+function resetSteps() {
+  steps = JSON.parse(JSON.stringify(DEFAULT_STEPS));
+  themes = JSON.parse(JSON.stringify(BUILTIN_THEMES));
+  const custom = JSON.parse(localStorage.getItem(LS_THEMES) || '[]');
+  custom.forEach(t => themes.push(t));
+  renderFlow();
+  renderLegend();
+  toast('↺ Reset to default');
+}
+
+function addStep() {
+  const role  = document.getElementById('ns-role').value.trim() || 'New Role';
+  const title = document.getElementById('ns-title').value.trim() || 'New Step';
+  const desc  = document.getElementById('ns-desc').value.trim() || 'Describe this step…';
+  const pos   = parseInt(document.getElementById('ns-position').value);
+  steps.splice(pos, 0, { role, title, desc, themeId: selectedNewThemeId });
+  closeModal('add-step');
+  renderFlow();
+  renderLegend();
+  toast('Step added');
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function openModal(id) {
+  if (id === 'add-step') {
+    selectedNewThemeId = 'designer';
+    buildThemeSelectRow('ns-theme-row');
+    const sel = document.getElementById('ns-position');
+    sel.innerHTML = '';
+    const first = document.createElement('option');
+    first.value = 0; first.textContent = 'At the beginning';
+    sel.appendChild(first);
+    steps.forEach((s, i) => {
+      const opt = document.createElement('option');
+      opt.value = i + 1; opt.textContent = `After Step ${i+1}: ${s.title}`;
+      sel.appendChild(opt);
+    });
+    sel.value = steps.length;
+  }
+  if (id === 'manage-themes') {
+    renderThemeList();
+    updateColorPreview();
+  }
+  document.getElementById('modal-' + id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById('modal-' + id).classList.remove('open');
+}
+
+function openSaveTray() {
+  closeSaveTray();
+  requirePassword(() => openModal('save'));
+}
+
+function toggleLoadTray() {
+  const tray = document.getElementById('saves-tray');
+  if (tray.classList.contains('open')) {
+    closeSaveTray();
+  } else {
+    renderSavesList();
+    tray.classList.add('open');
+  }
+}
+
+function closeSaveTray() {
+  document.getElementById('saves-tray').classList.remove('open');
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', (e) => {
+    if (e.target === el) el.classList.remove('open');
+  });
+});
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadThemesFromStorage();
+renderFlow();
+renderLegend();
+</script>
+</body>
+</html>
