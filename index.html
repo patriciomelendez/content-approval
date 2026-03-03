@@ -39,8 +39,8 @@
   .header .label { font-family: 'Syne', sans-serif; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
   .header h1 {
     font-family: 'Syne', sans-serif;
-    font-size: clamp(20px, 2.8vw, 30px);
-    font-weight: 800; white-space: nowrap;
+    font-size: 24px;
+    font-weight: 800;
     background: linear-gradient(135deg, #fff 40%, #4f8ef7);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
@@ -250,12 +250,8 @@
 <div class="page">
 
   <div class="header">
-    <div class="label">Workflow Documentation</div>
     <h1>Content Approval Process</h1>
-    <p>From creation to final approval — one source of truth in Asana</p>
   </div>
-
-  <div class="legend" id="legend"></div>
 
   <div class="toolbar">
     <button class="btn" onclick="openModal('add-step')">＋ Add Step</button>
@@ -272,7 +268,6 @@
     <div id="saves-list" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"></div>
   </div>
 
-  <div class="edit-hint">✏️ Click title or description to edit &nbsp;·&nbsp; <span>drag</span> to reorder &nbsp;·&nbsp; numbers auto-update</div>
 
   <div class="flow-wrapper">
     <div id="flow"></div>
