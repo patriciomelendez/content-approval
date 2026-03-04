@@ -301,8 +301,8 @@
   </div>
 
   <div class="toolbar">
-    <button class="btn" onclick="openModal('add-step')">＋ Add Step</button>
-    <button class="btn btn-purple" onclick="openModal('manage-themes')">🎨 Themes</button>
+    <button class="btn" onclick="requirePassword(() => openModal('add-step'))">＋ Add Step</button>
+    <button class="btn btn-purple" onclick="requirePassword(() => openModal('manage-themes'))">🎨 Themes</button>
     <div class="btn-sep"></div>
     <button class="btn btn-green" onclick="openSaveTray()">💾 Save</button>
     <button class="btn" onclick="toggleLoadTray()">📂 Load</button>
@@ -714,6 +714,7 @@ function renderThemeList() {
 }
 
 function updateThemeColor(id, color) {
+  if (!isSessionValid()) { requirePassword(() => {}); return; }
   const t = themes.find(x => x.id === id);
   if (!t) return;
   t.color = color;
@@ -771,7 +772,7 @@ function renderFlow() {
     const del = document.createElement('div');
     del.className = 'delete-btn';
     del.textContent = '×';
-    del.onclick = (e) => { e.stopPropagation(); removeStep(i); };
+    del.onclick = (e) => { e.stopPropagation(); requirePassword(() => removeStep(i)); };
     card.appendChild(del);
 
     const handle = document.createElement('div');
@@ -806,6 +807,7 @@ function renderFlow() {
     applyThemeToCard(card, step.themeId);
 
     card.addEventListener('dragstart', (e) => {
+      if (!isSessionValid()) { e.preventDefault(); requirePassword(() => {}); return; }
       dragSrcIndex = i;
       setTimeout(() => card.style.opacity = '0.35', 0);
       e.dataTransfer.effectAllowed = 'move';
@@ -930,6 +932,16 @@ function toast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
+
+// ============================================================
+// GLOBAL AUTH GUARD — block contentEditable focus if locked
+// ============================================================
+document.addEventListener('focusin', (e) => {
+  if (e.target.contentEditable === 'true' && !isSessionValid()) {
+    e.target.blur();
+    requirePassword(() => setTimeout(() => e.target.focus(), 50));
+  }
+});
 
 // ============================================================
 // LIGHT / DARK THEME
