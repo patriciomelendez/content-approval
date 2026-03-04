@@ -243,6 +243,54 @@
 
   @keyframes fadeDown { from { opacity:0; transform:translateY(-14px); } to { opacity:1; transform:translateY(0); } }
   @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ===== LIGHT THEME ===== */
+  body.light-theme {
+    --bg: #f0f2f8;
+    --border: #d4d8e8;
+    --accent: #2563eb;
+    --accent2: #7c3aed;
+    --success: #059669;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --text: #1a1d27;
+    --muted: #64748b;
+    --card: #ffffff;
+  }
+  body.light-theme .step-card h3 { color: #1a1d27; }
+  body.light-theme .step-card p { color: #64748b; }
+  body.light-theme .step-card h3:focus { background: rgba(0,0,0,0.04); }
+  body.light-theme .step-card p:focus { background: rgba(0,0,0,0.03); }
+  body.light-theme .slack-mockup { background: #f8f9fc; border-color: var(--border); }
+  body.light-theme .sm-header { border-bottom-color: var(--border); }
+  body.light-theme .sm-body { color: #475569; }
+  body.light-theme .sm-body .divider { color: var(--border); }
+  body.light-theme .sm-image { background: linear-gradient(135deg, #e2e6f0, #edf0f7); }
+  body.light-theme .modal { background: #ffffff; }
+  body.light-theme .form-group input,
+  body.light-theme .form-group textarea,
+  body.light-theme .form-group select { background: #f0f2f8; color: var(--text); }
+  body.light-theme .save-chip { background: #f0f2f8; }
+  body.light-theme .theme-opt { background: #f0f2f8; }
+  body.light-theme .theme-list-item { background: #f0f2f8; }
+  body.light-theme .save-input-row input { background: #f0f2f8; color: var(--text); }
+  body.light-theme .toast { background: #ffffff; }
+  body.light-theme .note-box { background: #ffffff; }
+  body.light-theme .why-box { background: #ffffff; }
+  body.light-theme .saves-tray { background: #ffffff; }
+  body.light-theme .sm-name { color: #1a1d27; }
+  body.light-theme .sm-disabled { color: #dc2626; }
+  body.light-theme .header h1 { color: #1a1d27; }
+
+  /* Toggle button */
+  .theme-toggle-btn {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); width: 34px; height: 34px; border-radius: 8px;
+    font-size: 15px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; transition: border-color 0.2s, background 0.2s;
+    flex-shrink: 0;
+  }
+  .theme-toggle-btn:hover { border-color: var(--accent); background: rgba(79,142,247,0.08); }
 </style>
 </head>
 <body>
@@ -258,6 +306,8 @@
     <div class="btn-sep"></div>
     <button class="btn btn-green" onclick="openSaveTray()">💾 Save</button>
     <button class="btn" onclick="toggleLoadTray()">📂 Load</button>
+    <div class="btn-sep"></div>
+    <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   </div>
 
   <div class="saves-tray" id="saves-tray">
@@ -882,6 +932,21 @@ function toast(msg) {
 }
 
 // ============================================================
+// LIGHT / DARK THEME
+// ============================================================
+function initTheme() {
+  const saved = localStorage.getItem('cap_theme');
+  const isLight = saved === 'light';
+  document.body.classList.toggle('light-theme', isLight);
+  document.getElementById('theme-toggle').textContent = isLight ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-theme');
+  localStorage.setItem('cap_theme', isLight ? 'light' : 'dark');
+  document.getElementById('theme-toggle').textContent = isLight ? '☀️' : '🌙';
+}
+
+// ============================================================
 // INIT
 // ============================================================
 async function init() {
@@ -900,6 +965,7 @@ async function init() {
     }
   }
   initialized = true;
+  initTheme();
   renderFlow();
   renderLegend();
 }
