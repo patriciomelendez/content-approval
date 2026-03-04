@@ -291,6 +291,96 @@
     flex-shrink: 0;
   }
   .theme-toggle-btn:hover { border-color: var(--accent); background: rgba(79,142,247,0.08); }
+
+  /* ===== RESPONSIVE: MOBILE ===== */
+  @media (max-width: 768px) {
+    body {
+      padding: 20px 16px 40px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+    }
+
+    .toolbar {
+      gap: 6px;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .flow-wrapper {
+      overflow-x: visible;
+      text-align: left;
+    }
+
+    #flow {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      padding: 4px 0 8px;
+    }
+
+    .node {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .step-card {
+      width: 100%;
+    }
+
+    .connector {
+      flex-direction: row;
+      justify-content: center;
+      padding: 0;
+      min-width: unset;
+      width: 2px;
+      height: 32px;
+      margin: 0 auto;
+      gap: 0;
+    }
+
+    .conn-line {
+      width: 2px;
+      height: 32px;
+    }
+
+    .conn-line::after {
+      content: '▼';
+      right: auto;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: -7px;
+      top: auto;
+    }
+
+    .bottom {
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .loopback {
+      margin-bottom: 20px;
+    }
+
+    .modal {
+      width: 92vw;
+      max-width: 92vw;
+    }
+
+    .theme-select-row {
+      gap: 6px;
+    }
+
+    .theme-opt {
+      font-size: 10px;
+      padding: 6px 8px;
+    }
+  }
 </style>
 </head>
 <body>
