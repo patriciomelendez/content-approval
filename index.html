@@ -305,7 +305,7 @@
     <button class="btn btn-purple" onclick="requirePassword(() => openModal('manage-themes'))">🎨 Themes</button>
     <div class="btn-sep"></div>
     <button class="btn btn-green" onclick="openSaveTray()">💾 Save</button>
-    <button class="btn" onclick="toggleLoadTray()">📂 Load</button>
+    <button class="btn" onclick="requirePassword(() => toggleLoadTray())">📂 Load</button>
     <div class="btn-sep"></div>
     <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   </div>
@@ -622,7 +622,7 @@ async function renderSavesList() {
     const chip = document.createElement('div');
     chip.className = 'save-chip';
     chip.style.borderColor = isActive ? 'var(--success)' : '';
-    chip.innerHTML = `<span onclick="loadConfig('${name}')">${name}${isActive ? ' ✓' : ''}</span><span class="chip-del" onclick="deleteConfig('${name}')" title="Delete">×</span>`;
+    chip.innerHTML = `<span onclick="requirePassword(() => loadConfig('${name}'))">${name}${isActive ? ' ✓' : ''}</span><span class="chip-del" onclick="requirePassword(() => deleteConfig('${name}'))" title="Delete">×</span>`;
     container.appendChild(chip);
   });
 }
